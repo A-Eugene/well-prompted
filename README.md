@@ -120,6 +120,22 @@ npx skills add ./well-prompted
 Once installed, it activates when you ask an agent to write, improve, review, or
 port a prompt for a specific model.
 
+### On Codex
+
+The skill format is cross-agent: Codex reads skills from the same `SKILL.md`
+convention (a directory with a `SKILL.md` carrying `name` + `description`), so
+`well-prompted` is **Codex-compatible as-is** — its content is already
+model-agnostic and ships the OpenAI/GPT overlay in `models/openai.md`. Install
+it into Codex's skills directory per the
+[Codex skills docs](https://developers.openai.com/codex/skills); explicit
+invocation is `$well-prompted`, or leave `allow_implicit_invocation` on (the
+default) for automatic activation. No content changes are needed to run it on
+Codex.
+
+> Not independently verified: the exact on-disk skills path and any per-agent
+> quirks of `npx skills add --agent codex` — confirm against the Codex docs
+> above before relying on the install command.
+
 ## Maintenance & extending
 
 - **Refresh a provider:** re-fetch the URLs in `models/<provider>.md`, update
