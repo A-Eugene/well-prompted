@@ -1,38 +1,54 @@
 # Model dispatch — Google / Gemini
 
-> Overlay on the invariant core. Only what is specific to Gemini appears here.
-> **Sources** (fetched 2026-07-06):
-> - Prompting strategies: https://ai.google.dev/gemini-api/docs/prompting-strategies
+> **Sources** (fetched 2026-08-03):
+> - Prompt design strategies: https://ai.google.dev/gemini-api/docs/prompting-strategies
+>
+> Re-fetch if the target model is newer than the date above.
+> Models named as current: **Gemini 3**, **Gemini 3 Flash**, Gemini 2.5.
 
-## Examples — the strongest stance of the three providers
+## Errors your priors will cause
+
+- **Do not tune sampling parameters on Gemini 3.x.** Google now *"strongly
+  recommend[s] keeping them at their default values for Gemini 3.x models."*
+  This **reverses** the long-standing Gemini guidance that `temperature` /
+  `topK` / `topP` are a first-class lever — that advice still applies to older
+  Gemini generations only. Raising temperature "for creativity" on a 3.x model
+  is now working against the model.
+- **Thinking is automatic on Gemini 2.5 and 3.** They generate internal
+  reasoning text on their own — do not hand-write chain-of-thought scaffolding.
+- **XML is fine here now.** System instructions are documented as *"structured
+  XML tags or Markdown"* for role, constraints, and output format. The older
+  prefixes-not-XML framing no longer holds for system instructions.
+
+## The strongest few-shot stance of the three providers
+
 - **Always include few-shot examples.** Google states plainly that prompts
-  *without* few-shot examples "are likely to be less effective." Treat
-  zero-shot as the exception, not the default. This is a stronger position than
-  Anthropic's or OpenAI's, and the first thing to add to a weak Gemini prompt.
+  *without* few-shot examples "are likely to be less effective." Zero-shot is
+  the exception, not the default — this is the first thing to add to a weak
+  Gemini prompt.
+- **Keep example formatting identical across examples.** Inconsistent structure
+  in the examples produces inconsistent output format.
 
-## Structure & delimiters
-- Use **prefixes** to structure content and signal segments — e.g. `input:`,
-  `output:`, `example:` — rather than XML tags. Prefixes also help specify the
-  output format.
+## Structure and content
 
-## Instructions, constraints, format
-- Give **clear, specific instructions** (questions, tasks, entities).
-- **Specify constraints** — say what to do *and what not to do* (e.g. "summarize
-  in a single sentence").
-- **Define the response format** explicitly (table, bulleted list, keywords,
-  paragraph, elevator pitch, etc.).
-- Add the **context** the model needs rather than assuming it.
+- **Prefixes** (`input:`, `output:`, `example:`) remain the idiom for marking
+  segments *within* a prompt; XML/Markdown for system instructions.
+- **Specify constraints** — say what to do *and* what not to do (Gemini's guide
+  is more comfortable with negative constraints than Anthropic's).
+- **Define the response format** explicitly: table, bulleted list, keywords,
+  sentence, paragraph, elevator pitch.
+- Add the context the model needs rather than assuming it.
+- **Fallback responses:** specify what the model should return when it cannot
+  answer, rather than leaving it to improvise.
 
-## Decomposition & iteration
-- **Break complex prompts down** — separate instructions, chain sequential
-  prompts, or aggregate parallel task responses.
-- **Iterate strategically:** rephrase, try analogous framings, or **reorder**
-  prompt content when results underperform.
+## Decomposition and iteration
 
-## Sampling parameters — a first-class lever (distinctive)
-- Gemini's guide treats **parameter tuning as best practice**, unlike the other
-  two: `temperature`, `topK`, `topP`, `max output tokens`, `stop sequences`.
-- Practical: **raise temperature for creative/varied output** (e.g. style or
-  fiction, where low temperature flattens natural variance); lower it for
-  deterministic/extraction tasks. Don't leave these at default when output
-  character matters.
+- Break instructions down, chain sequential prompts, aggregate parallel
+  responses.
+- When results underperform: rephrase, switch to an analogous task framing, or
+  **change the order of prompt content**.
+
+## Also on the page
+
+Grounding and code execution, and an agentic-workflows section — fetch these
+when the task needs them rather than working from this summary.
