@@ -1,12 +1,13 @@
 ---
 name: well-prompted
 description: >-
-  Write, improve, or review a prompt or system prompt for any LLM. Applies a
-  model-independent core of prompting best practices, then overlays
-  target-model-specific tactics (Claude / OpenAI / Gemini). Use when the user
-  says "write a prompt", "improve this system prompt", "make this prompt better
-  for GPT/Claude/Gemini", "prompt engineering", or is drafting instructions for
-  a model.
+  Write, improve, review, or port a prompt or system prompt for a specific
+  target LLM. Supplies what a model cannot know about its target: deprecated
+  features and parameters that now error, guidance that reversed in the current
+  model generation, and the cross-provider reflexes that are wrong for the
+  target (Claude / OpenAI / Gemini). Use when the user says "write a prompt",
+  "improve this system prompt", "make this prompt better for GPT/Claude/Gemini",
+  "prompt engineering", or is drafting instructions for a model.
 ---
 
 # well-prompted
@@ -34,15 +35,19 @@ files below are a gotcha sheet plus a fetch trigger, not a tutorial.
    you are running on. If unknown, ask.
 2. **Check the fetch date at the top of `models/<provider>.md`. If the target
    model is newer than that date, or the stakes are high, fetch the listed
-   source URLs before applying the file.** Do not skip this on a hunch that
-   nothing has changed — you cannot suspect drift you have never heard of, and
-   a stale file is worse than no file because it replaces your hedging with
-   false confidence.
+   source URLs before applying the file.** Skipping this on a hunch that
+   nothing has changed defeats the file's purpose: you cannot suspect drift you
+   have never heard of, and a stale file is worse than no file because it
+   replaces your hedging with false confidence. No fetch capability available?
+   Apply the snapshot and label it as of its fetch date.
 3. **Apply the provider file.** It holds only what adds to or overrides the
    three principles below.
-4. **Say what you did not verify.** If you applied the snapshot without
-   fetching, say so.
-5. **Iterate against a check** — change one thing at a time, re-measure.
+4. **Iterate against a check** — change one thing at a time, re-measure.
+
+**Done when:** the target model is named (or its absence is stated); the
+provider overlay was applied, or you state that none existed; and anything
+unverified — an unfetched snapshot, an unknown model version — is stated in the
+output rather than left implicit.
 
 ---
 
@@ -62,6 +67,62 @@ informational — they change what gets *done*, not what is known.
    a model whose docs ask for labeled prefixes — or forcing chain-of-thought on
    a model that reasons internally — is the exact failure this two-layer design
    exists to prevent.
+
+---
+
+## Worked example
+
+*Request:* "Write a system prompt for a Gemini 3 Flash summarizer."
+
+**Reflex answer** — what a model produces without the overlay. Every line of it
+is defensible generic advice, and three of them are wrong for this target:
+
+```
+<instructions>
+  Summarize the input document in three sentences.
+</instructions>
+<input>{{DOCUMENT}}</input>
+
+Set temperature to 0.9 for more natural, varied summaries.
+Think step by step before writing the summary.
+```
+
+**With the procedure applied:**
+
+1. Target = Gemini 3 Flash.
+2. `models/gemini.md` is dated 2026-08-03; Gemini 3 predates it → snapshot is
+   current, no fetch needed.
+3. Overlay fires on four points — three corrections and one addition:
+   - XML scaffolding is a Claude reflex. Gemini's idiom is labeled prefixes
+     (`input:` / `output:`), with XML or Markdown reserved for the system
+     instruction itself.
+   - **Leave `temperature` at its default.** Gemini 3.x guidance explicitly
+     advises against tuning sampling parameters — the reflex answer's "0.9 for
+     variety" works against the model.
+   - Gemini 2.5/3 generate internal reasoning automatically; "think step by
+     step" is redundant at best.
+   - And the overlay *adds* something absent from the reflex answer: Gemini's
+     guidance is that prompts without few-shot examples "are likely to be less
+     effective." Examples are not optional here.
+
+```
+You summarize documents. Respond with exactly three sentences, no preamble.
+
+example:
+input: <a short sample document>
+output: <a three-sentence summary>
+
+example:
+input: <a sample with a different shape — a table, a transcript>
+output: <a three-sentence summary>
+
+input: {{DOCUMENT}}
+output:
+```
+
+Note what carried the weight: not "be clear and specific" — the reflex answer
+already was. The overlay changed the outcome by *overriding a default* and
+supplying a fact about a specific model generation.
 
 ---
 
